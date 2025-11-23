@@ -1,2 +1,3 @@
-# projeto-gastos
-Projeto Flutter para calcular gastos de universitários.
+# flutter_application_1
+
+A new Flutter project.
