@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-
+// Então o deshboard é a tela visual do começo da tela, contendo então suas despesas
 class DashboardScreen extends StatelessWidget {
   final List<Map<String, dynamic>> transacoes;
   const DashboardScreen({super.key, required this.transacoes});
@@ -25,16 +25,16 @@ class DashboardScreen extends StatelessWidget {
       }
       return (t['tipo'] == 'despesa') && mesmaData(d, hoje);
     }).toList();
-
+    // calculo dos valores do usuario
     final totalDespesasHoje = despesasHoje.fold<double>(0.0, (s, t) => s + (t['valor'] as double));
 
-    final Map<String, double> categorias = {};
+    final Map<String, double> categorias = {}; //Aqui soma o total gasto hoje
     for (var t in despesasHoje) {
       final cat = (t['categoria'] as String?) ?? 'Outros';
       categorias[cat] = (categorias[cat] ?? 0) + (t['valor'] as double);
     }
 
-    return Scaffold(
+    return Scaffold( //Todos os componentes, appBar, body, floatingActionButton, etc...
       appBar: AppBar(
         title: const Text('App de gastos'),
         actions: [
@@ -65,7 +65,7 @@ class DashboardScreen extends StatelessWidget {
                   trailing: Text(NumberFormat.simpleCurrency(locale: 'pt_BR').format(e.value)),
                 ),
               )),
-            const SizedBox(height: 20),
+            const SizedBox(height: 20), // botões para navegar para tela de ver transações e ver novas transações
             ElevatedButton.icon(icon: const Icon(Icons.list), label: const Text('Ver transações'), onPressed: () => Navigator.pushNamed(context, '/transactions')),
             const SizedBox(height: 8),
             ElevatedButton.icon(icon: const Icon(Icons.add), label: const Text('Nova transação'), onPressed: () => Navigator.pushNamed(context, '/transaction_form')),
