@@ -19,7 +19,7 @@ class TransactionRepository {
     
     return _box.values.map<Map<String, dynamic>>((v) {
       if (v is Map) {
-        return Map<String, dynamic>.from(Map<String, dynamic>.from(v as Map));
+        return Map<String, dynamic>.from(Map<String, dynamic>.from(v));
       }
       return {};
     }).toList();
