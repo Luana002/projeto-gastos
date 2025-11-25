@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-// Tela para o formulario de transação, tanto para criar nova quanto para editar
-class TransactionFormScreen extends StatefulWidget {
-  final void Function(Map<String, dynamic>)? onSalvar; 
-  final List<Map<String, dynamic>>? transacoes;
+import 'package:provider/provider.dart';
+import '../providers/transaction_provider.dart';
 
-  const TransactionFormScreen({super.key, this.onSalvar, this.transacoes});
+// Formulário de transação — agora usa provider para salvar/atualizar
+class TransactionFormScreen extends StatefulWidget {
+  const TransactionFormScreen({super.key});
 
   @override
   State<TransactionFormScreen> createState() => _TransactionFormScreenState();
@@ -28,7 +28,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     final arg = ModalRoute.of(context)!.settings.arguments;
     if (arg != null && arg is Map<String, dynamic> && _edit == null) {
       _edit = arg;
-      
+
       _valorCtrl.text = (_edit!['valor'] ?? '').toString();
       _descCtrl.text = (_edit!['descricao'] ?? '').toString();
       _categoria = _edit!['categoria'] as String?;
@@ -39,7 +39,11 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       } else if (maybeDate is String) {
         try {
           _data = DateFormat('dd/MM/yyyy').parse(maybeDate);
-        } catch (_) {}
+        } catch (_) {
+          try {
+            _data = DateTime.parse(maybeDate);
+          } catch (_) {}
+        }
       }
       setState(() {});
     }
@@ -62,7 +66,7 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
     if (picked != null) setState(() => _data = picked);
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
     if (!_formKey.currentState!.validate()) return;
 
     final valor = double.tryParse(_valorCtrl.text.replaceAll(',', '.')) ?? 0.0;
@@ -79,13 +83,17 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
       'data': _data,
     };
 
-    if (widget.onSalvar != null) {
-      widget.onSalvar!(transacao);
-      Navigator.pop(context);
-      return;
+    final provider = Provider.of<TransactionProvider>(context, listen: false);
+    if (transacao.containsKey('id')) {
+      await provider.update(transacao);
+    } else {
+      await provider.add(transacao);
     }
 
-    Navigator.pop(context, transacao);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Transação salva')));
+      Navigator.pop(context);
+    }
   }
 
   @override
@@ -167,9 +175,13 @@ class _TransactionFormScreenState extends State<TransactionFormScreen> {
               if (_edit != null) ...[
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
                     final id = _edit!['id'];
-                    Navigator.pop(context, {'deleted': true, 'id': id});
+                    if (id != null) {
+                      final provider = Provider.of<TransactionProvider>(context, listen: false);
+                      await provider.delete(id as int);
+                      if (mounted) Navigator.pop(context);
+                    }
                   },
                   icon: const Icon(Icons.delete),
                   label: const Text('Mover para lixeira'),
